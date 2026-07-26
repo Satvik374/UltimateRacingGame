@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Ultimate Racing &mdash; 3D Car Racing Game</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%8E%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+
+    <!-- Import map for Three.js modules (CDN, no build step needed) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1 class="game-title">ULTIMATE<span>RACING</span></h1>
+            <div class="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
+            <p id="loading-text">Initializing engine&hellip;</p>
+            <p class="loading-hint">Built with Three.js &mdash; WebGL 2.0 required</p>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="main-menu" class="hidden">
+        <div class="menu-background"></div>
+        <div class="menu-content">
+            <h1 class="game-title big">ULTIMATE<span>RACING</span></h1>
+            <p class="subtitle">3D Arcade Racing &bull; PC Edition</p>
+
+            <div class="menu-buttons">
+                <button class="menu-btn primary" data-mode="race">
+                    <span class="btn-icon">&#x1F3C1;</span>
+                    <span class="btn-label">RACE MODE</span>
+                    <span class="btn-desc">3 laps vs 4 AI opponents</span>
+                </button>
+                <button class="menu-btn primary" data-mode="freeroam">
+                    <span class="btn-icon">&#x1F30D;</span>
+                    <span class="btn-label">FREE ROAM + TIME TRIAL</span>
+                    <span class="btn-desc">Open driving &amp; lap records</span>
+                </button>
+                <button class="menu-btn secondary" id="settings-btn">
+                    <span class="btn-icon">&#x2699;</span>
+                    <span class="btn-label">SETTINGS</span>
+                </button>
+                <button class="menu-btn secondary" id="controls-btn">
+                    <span class="btn-icon">&#x1F3AE;</span>
+                    <span class="btn-label">CONTROLS</span>
+                </button>
+            </div>
+
+            <div class="car-select">
+                <h3>Car Color</h3>
+                <div class="color-swatches">
+                    <button class="swatch" data-color="#e63946" style="background:#e63946" title="Crimson"></button>
+                    <button class="swatch selected" data-color="#f1c40f" style="background:#f1c40f" title="Sunburst"></button>
+                    <button class="swatch" data-color="#2ecc71" style="background:#2ecc71" title="Emerald"></button>
+                    <button class="swatch" data-color="#3498db" style="background:#3498db" title="Azure"></button>
+                    <button class="swatch" data-color="#9b59b6" style="background:#9b59b6" title="Amethyst"></button>
+                    <button class="swatch" data-color="#ecf0f1" style="background:#ecf0f1" title="Pearl"></button>
+                    <button class="swatch" data-color="#1a1a1a" style="background:#1a1a1a" title="Obsidian"></button>
+                    <button class="swatch" data-color="#ff6b35" style="background:#ff6b35" title="Inferno"></button>
+                </div>
+            </div>
+
+            <p class="credits">Made with Three.js &bull; WASD to drive, Space for handbrake, Shift for boost</p>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="hidden modal">
+        <div class="modal-content">
+            <h2>Graphics Settings</h2>
+            <div class="setting-row">
+                <label>Quality Preset</label>
+                <select id="quality-select">
+                    <option value="low">Low (Best FPS)</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="ultra">Ultra (Demanding)</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label>Shadows</label>
+                <input type="checkbox" id="shadows-toggle" checked />
+            </div>
+            <div class="setting-row">
+                <label>Post-Processing (Bloom/SSAO)</label>
+                <input type="checkbox" id="postfx-toggle" checked />
+            </div>
+            <div class="setting-row">
+                <label>Motion Blur</label>
+                <input type="checkbox" id="motion-blur-toggle" checked />
+            </div>
+            <div class="setting-row">
+                <label>Master Volume</label>
+                <input type="range" id="volume-slider" min="0" max="100" value="60" />
+            </div>
+            <button class="menu-btn primary" id="settings-close">BACK</button>
+        </div>
+    </div>
+
+    <!-- Controls Help -->
+    <div id="controls-panel" class="hidden modal">
+        <div class="modal-content">
+            <h2>Controls</h2>
+            <div class="controls-grid">
+                <div class="kbd-row"><kbd>W</kbd> / <kbd>&uarr;</kbd> <span>Accelerate</span></div>
+                <div class="kbd-row"><kbd>S</kbd> / <kbd>&darr;</kbd> <span>Brake / Reverse</span></div>
+                <div class="kbd-row"><kbd>A</kbd> / <kbd>&larr;</kbd> <span>Steer Left</span></div>
+                <div class="kbd-row"><kbd>D</kbd> / <kbd>&rarr;</kbd> <span>Steer Right</span></div>
+                <div class="kbd-row"><kbd>Space</kbd> <span>Handbrake (Drift)</span></div>
+                <div class="kbd-row"><kbd>Shift</kbd> <span>Turbo Boost</span></div>
+                <div class="kbd-row"><kbd>C</kbd> <span>Cycle Camera</span></div>
+                <div class="kbd-row"><kbd>R</kbd> <span>Reset to Track</span></div>
+                <div class="kbd-row"><kbd>Esc</kbd> <span>Pause / Menu</span></div>
+                <div class="kbd-row"><kbd>H</kbd> <span>Toggle HUD</span></div>
+            </div>
+            <button class="menu-btn primary" id="controls-close">BACK</button>
+        </div>
+    </div>
+
+    <!-- Pause Menu -->
+    <div id="pause-menu" class="hidden modal">
+        <div class="modal-content">
+            <h2>Paused</h2>
+            <button class="menu-btn primary" id="resume-btn">RESUME</button>
+            <button class="menu-btn secondary" id="restart-btn">RESTART</button>
+            <button class="menu-btn secondary" id="quit-btn">QUIT TO MENU</button>
+        </div>
+    </div>
+
+    <!-- Race Finished -->
+    <div id="race-finish" class="hidden modal">
+        <div class="modal-content">
+            <h2 id="finish-title">RACE COMPLETE!</h2>
+            <div id="finish-stats"></div>
+            <button class="menu-btn primary" id="finish-again-btn">RACE AGAIN</button>
+            <button class="menu-btn secondary" id="finish-quit-btn">MAIN MENU</button>
+        </div>
+    </div>
+
+    <!-- HUD (Heads-Up Display) -->
+    <div id="hud" class="hidden">
+        <!-- Top bar: Lap / Position / Timer -->
+        <div class="hud-top">
+            <div class="hud-panel lap-info">
+                <div class="hud-label">LAP</div>
+                <div class="hud-value"><span id="hud-lap-current">1</span>/<span id="hud-lap-total">3</span></div>
+            </div>
+            <div class="hud-panel position-info" id="hud-position-panel">
+                <div class="hud-label">POSITION</div>
+                <div class="hud-value" id="hud-position">1/5</div>
+            </div>
+            <div class="hud-panel timer-info">
+                <div class="hud-label">LAP TIME</div>
+                <div class="hud-value" id="hud-lap-time">00:00.00</div>
+                <div class="hud-sub">BEST <span id="hud-best-time">--:--.--</span></div>
+            </div>
+        </div>
+
+        <!-- Bottom left: Minimap -->
+        <div class="hud-minimap">
+            <canvas id="minimap" width="220" height="220"></canvas>
+        </div>
+
+        <!-- Bottom right: Speedometer -->
+        <div class="hud-speedometer">
+            <svg viewBox="0 0 200 200" class="speedo-svg">
+                <!-- Outer ring -->
+                <circle cx="100" cy="100" r="90" fill="rgba(0,0,0,0.65)" stroke="#1a1a1a" stroke-width="3" />
+                <!-- Tick marks -->
+                <g id="speedo-ticks"></g>
+                <!-- RPM arc -->
+                <path id="rpm-arc" d="" fill="none" stroke="url(#rpmGrad)" stroke-width="8" stroke-linecap="round" />
+                <defs>
+                    <linearGradient id="rpmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#2ecc71" />
+                        <stop offset="60%" stop-color="#f1c40f" />
+                        <stop offset="100%" stop-color="#e74c3c" />
+                    </linearGradient>
+                </defs>
+                <!-- Needle -->
+                <line id="speedo-needle" x1="100" y1="100" x2="100" y2="25" stroke="#e74c3c" stroke-width="3" stroke-linecap="round" />
+                <circle cx="100" cy="100" r="6" fill="#e74c3c" />
+            </svg>
+            <div class="speedo-digital">
+                <div class="speed-value"><span id="hud-speed">0</span><span class="speed-unit">KM/H</span></div>
+                <div class="gear-value">GEAR <span id="hud-gear">N</span></div>
+                <div class="boost-bar"><div id="hud-boost"></div></div>
+            </div>
+        </div>
+
+        <!-- Top right: Checkpoint notification -->
+        <div class="hud-notification" id="hud-notification"></div>
+
+        <!-- Countdown -->
+        <div class="hud-countdown hidden" id="hud-countdown">3</div>
+    </div>
+
+    <!-- Render canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Main game entry point -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
